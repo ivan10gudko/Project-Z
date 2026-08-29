@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import project_z.demo.Events.EventDtos.TitleEvent.TitleCreatedEvent;
+import project_z.demo.Events.EventDtos.TitleEvent.TitleDeletedEvent;
+import project_z.demo.Events.EventDtos.TitleEvent.TitlePositionUpdatedEvent;
+import project_z.demo.Events.EventDtos.TitleEvent.TitleUpdatedEvent;
 import project_z.demo.JavaUtil.BeanUtilsHelper;
 import project_z.demo.JavaUtil.PagingHelper;
 import project_z.demo.JavaUtil.PatchHelper;
@@ -33,8 +38,11 @@ import project_z.demo.common.QueryParameters.TitleQueryParameters;
 import project_z.demo.dto.TitleDtos.SameCriteriaRatingResponse;
 import project_z.demo.dto.TitleDtos.TargetTitleContext;
 import project_z.demo.dto.TitleDtos.TitleBatchCreateDto;
+import project_z.demo.dto.TitleDtos.TitleDeletedEventDto;
 import project_z.demo.dto.TitleDtos.TitleDto;
 import project_z.demo.dto.TitleDtos.TitlePatchUpdateDto;
+import project_z.demo.dto.TitleDtos.TitlePositionUpdateDto;
+import project_z.demo.dto.TitleDtos.TitlePositionUpdateEventDto;
 import project_z.demo.dto.TitleDtos.TitleSameCriteriaDto;
 import project_z.demo.dto.TitleDtos.TitleShortDto;
 import project_z.demo.dto.TitleDtos.TitleShortWithLinksToRoomTitleDto;
@@ -66,19 +74,16 @@ public class TitleServiceImpl implements TitleService {
     private final Mapper<TitleEntity, TitleShortDto> titleShortMapper;
     private final RoomTitleLinkRepository roomTitleLinkRepository;
     private final TitleShortWithLinksToRoomTitleMapper titleShortWithLinksToRoomTitleMapper;
+    private final ApplicationEventPublisher eventPublisher;
+
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Autowired
-    private BeanUtilsHelper beanUtilsHelper;
-    @Autowired
-    private TitleRepository titleRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private Mapper<TitleEntity, TitleDto> titleMapper;
+    private final BeanUtilsHelper beanUtilsHelper;
+    private final TitleRepository titleRepository;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+    private final Mapper<TitleEntity, TitleDto> titleMapper;
 
     @Override
     public TitleEntity createTitle(TitleEntity title) {
@@ -111,8 +116,7 @@ public class TitleServiceImpl implements TitleService {
     @Override
     public TitleDto findOne(Long titleId) {
         return titleMapper.mapTo(titleRepository.findById(titleId).orElseThrow(
-            () -> new ResourceNotFoundException("Title not found")
-        ));
+                () -> new ResourceNotFoundException("Title not found")));
     }
 
     @Override
@@ -181,8 +185,6 @@ public class TitleServiceImpl implements TitleService {
 
         Page<TitleEntity> titlesPage = titleRepository.findAll(spec, finalPageable);
 
-
-
         return titlesPage.map(title -> titleMapper.mapTo(title));
     }
 
@@ -193,7 +195,7 @@ public class TitleServiceImpl implements TitleService {
 
     @Override
     @Transactional
-    public TitleEntity partialUpdate(Long titleId, TitlePatchUpdateDto source) {
+    public TitleDto partialUpdate(Long titleId, TitlePatchUpdateDto source) {
         TitleEntity titleEntity = titleRepository.findById(titleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Title not found"));
 
@@ -208,8 +210,9 @@ public class TitleServiceImpl implements TitleService {
 
         titleRepository.saveAndFlush(titleEntity);
         entityManager.refresh(titleEntity);
-
-        return titleEntity;
+        TitleDto updatedDto = titleMapper.mapTo(titleEntity);
+        eventPublisher.publishEvent(new TitleUpdatedEvent(titleEntity.getUser().getUserId(), updatedDto));
+        return updatedDto;
     }
 
     @Override
@@ -219,11 +222,22 @@ public class TitleServiceImpl implements TitleService {
                 () -> new ResourceNotFoundException("title not found"));
         titleEntity.setCustomOrder(newPosition);
         titleRepository.save(titleEntity);
+
+        TitlePositionUpdateEventDto positionDto = new TitlePositionUpdateEventDto(titleId, newPosition);
+        eventPublisher.publishEvent(new TitlePositionUpdatedEvent(titleEntity.getUser().getUserId(), positionDto));
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
-        titleRepository.deleteById(id);
+        TitleEntity titleEntity = titleRepository.findById(id).orElse(null);
+        if (titleEntity != null) {
+            UUID userId = titleEntity.getUser().getUserId();
+            titleRepository.deleteById(id);
+
+            TitleDeletedEventDto deleteDto = new TitleDeletedEventDto(id);
+            eventPublisher.publishEvent(new TitleDeletedEvent(userId, deleteDto));
+        }
     }
 
     @Override
@@ -240,7 +254,12 @@ public class TitleServiceImpl implements TitleService {
                 });
 
         titleEntity.setUser(userEntity);
-        return titleRepository.save(titleEntity);
+        TitleEntity savedTitle = titleRepository.save(titleEntity);
+
+        TitleDto createdDto = titleMapper.mapTo(savedTitle);
+        eventPublisher.publishEvent(new TitleCreatedEvent(userId, createdDto));
+
+        return savedTitle;
     }
 
     @Override
@@ -272,10 +291,9 @@ public class TitleServiceImpl implements TitleService {
     @Override
     public TitleEntity findOneEntity(Long titleId) {
         return titleRepository.findById(titleId).orElseThrow(
-            () -> new ResourceNotFoundException("Title not found")
-        );
+                () -> new ResourceNotFoundException("Title not found"));
     }
-    
+
     @Override
     public TitleEntity findUserTitleByMalId(Integer titleMalId, String token) {
         UUID userId = jwtService.extractUsername(token);

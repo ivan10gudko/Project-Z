@@ -30,7 +30,7 @@ public interface TitleService {
 
     boolean isExists(Long titleId);
 
-    TitleEntity partialUpdate(Long titleId, TitlePatchUpdateDto titleEntity);
+    TitleDto partialUpdate(Long titleId, TitlePatchUpdateDto titleEntity);
 
     void deleteById(Long id);
 

@@ -171,8 +171,8 @@ public class TitleController {
         if (!titleService.isExists(titleId)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        TitleEntity updatedTitleEntity = titleService.partialUpdate(titleId, titleDto);
-        return new ResponseEntity<>(titleMapper.mapTo(updatedTitleEntity), HttpStatus.OK);
+        TitleDto res = titleService.partialUpdate(titleId, titleDto);
+        return new ResponseEntity<>(res,  HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ADMIN') || @securityService.isTitleOwner(#titleId)")
