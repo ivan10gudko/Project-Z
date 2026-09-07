@@ -5,6 +5,9 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "dev-force": "react-router dev --force",
+    "clean": "npx rimraf node_modules .vite package-lock.json",
+    "reinstall": "npm run clean && npm install",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -24,8 +27,6 @@
     "@tanstack/react-query-devtools": "^5.90.2",
     "axios": "^1.12.2",
     "clsx": "^2.1.1",
-    "isbot": "^5.1.27",
-    "qs": "^6.15.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-easy-crop": "^5.5.7",
@@ -35,13 +36,13 @@
     "react-router": "^7.7.1",
     "supabase": "^2.70.5",
     "tailwind-merge": "^3.6.0",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "isbot": "^5"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.1",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",
-    "@types/qs": "^6.15.1",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "tailwindcss": "^4.1.4",

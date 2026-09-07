@@ -3,7 +3,6 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
-import { Divider } from "@mui/material";
 import { Sidebar } from "~/shared/ui/Sidebar";
 import LogoutButton from "~/features/auth/ui/LogoutButton";
 import { NavLink } from "react-router";
@@ -122,7 +121,7 @@ export const UserProfileSidebar = ({
 
           {isOwn && (
             <div className="mt-auto pt-4">
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mb: 3 }} />
+              <div className="h-px bg-border/80 my-5" />
               <LogoutButton clickFallback={onClose} />
             </div>
           )}

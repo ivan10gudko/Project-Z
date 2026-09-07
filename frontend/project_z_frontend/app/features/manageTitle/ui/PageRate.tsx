@@ -1,16 +1,17 @@
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
+
 import {
     useRef,
     useState,
     type ChangeEvent,
     type FormEvent,
-    type MouseEvent,
 } from "react";
+
 import DoneOutlinedIcon from "@mui/icons-material/DoneOutlined";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import ClearIcon from "@mui/icons-material/Clear";
 import { StarRating } from "~/shared/ui/Rating";
 import { useTitleRecordMutation } from '~/entities/titleRecord/hooks/useTitleRecordMutation';
 import { Button } from "~/shared/ui/Button";
-import ClearIcon from "@mui/icons-material/Clear";
 import { formatRatingInput } from "~/shared/helpers/formatRating";
 import type { ManageTitleRecordProps } from "~/entities/titleRecord";
 

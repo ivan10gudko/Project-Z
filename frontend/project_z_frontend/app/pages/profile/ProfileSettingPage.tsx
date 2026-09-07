@@ -43,7 +43,9 @@ const PROFILE_SETTING_MENU: SettingItem[] = [
   },
   {
     id: "logout",
-    render: () => <LogoutButton classname="rounded-none! border-none py-4" />, //! import will be removed, after providing tailwind merge
+    render: () => (
+      <LogoutButton className="rounded-none border-none py-4 hover:scale-100" />
+    ),
     group: "Security",
   },
   {
