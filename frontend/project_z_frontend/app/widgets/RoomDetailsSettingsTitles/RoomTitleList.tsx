@@ -35,9 +35,7 @@ export const RoomTitleReadOnlyList = ({
         </div>
       ) : (
         titles.map((title) => {
-          const isAlreadyLinked = title.links.some(
-            (link) => String(link.title.titleId) === String(draggingTitleId)
-          );
+          const isAlreadyLinked = title.links.length > 0;
 
           return isMobile ? (
             <MobileRoomItem
@@ -80,9 +78,8 @@ interface MobileRoomItemProps {
 const MobileRoomItem = ({ title, isAlreadyLinked, onSelectMobileRoom }: MobileRoomItemProps) => (
   <div
     onClick={() => !isAlreadyLinked && onSelectMobileRoom?.(String(title.id))}
-    className={`relative w-full rounded-xl transition-all ${
-      isAlreadyLinked ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.99]"
-    }`}
+    className={`relative w-full rounded-xl transition-all ${isAlreadyLinked ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-[0.99]"
+      }`}
   >
     <RoomTitleReadOnlyRowShort title={title} isDraggingOver={false} />
     {isAlreadyLinked && (
@@ -104,11 +101,10 @@ const DesktopRoomItem = ({ title, isAlreadyLinked, draggingTitleId }: DesktopRoo
     {(provided, snapshot) => (
       <div ref={provided.innerRef} {...provided.droppableProps} className="w-full">
         <div
-          className={`relative transition-all duration-200 ease-in-out ${
-            snapshot.isDraggingOver && !isAlreadyLinked
-              ? "scale-[1.02] ring-2 ring-primary rounded-2xl z-20 shadow-xl"
-              : "scale-100"
-          }`}
+          className={`relative transition-all duration-200 ease-in-out ${snapshot.isDraggingOver && !isAlreadyLinked
+            ? "scale-[1.02] ring-2 ring-primary rounded-2xl z-20 shadow-xl"
+            : "scale-100"
+            }`}
         >
           <RoomTitleReadOnlyRowShort title={title} isDraggingOver={snapshot.isDraggingOver} />
 

@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +17,9 @@ public interface RoomTitleEntityRepository
     List<RoomTitleEntity> findByRoom_RoomId(Long roomId);
 
     boolean existsByRoom_RoomIdAndApiTitleId(Long roomId, Long apiTitleId);
+
+    @Query("SELECT r.titleName FROM RoomTitleEntity r WHERE r.id = :roomTitleId")
+    String findTitleNameByRoomTitleId(@Param("roomTitleId") UUID roomTitleId);
 
     void deleteByIdAndRoom_RoomId(UUID id, Long roomId);
 

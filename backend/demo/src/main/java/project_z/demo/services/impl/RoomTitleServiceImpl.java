@@ -128,11 +128,30 @@ public class RoomTitleServiceImpl implements RoomTitleService {
         if (roomId == null) {
             throw new ResourceNotFoundException("room not found");
         }
+        String statusName = params.getStatus() != null ? params.getStatus().name() : null;
+
+        Specification<RoomTitleStatsView> statusSpec;
+        if (Boolean.TRUE.equals(params.getIsMyStatus())) {
+            statusSpec = RoomTitleStatsSpecifications.hasMyStatus(statusName, currentUserId);
+        } else {
+            statusSpec = RoomTitleStatsSpecifications.hasStatus(statusName);
+        }
+
+        Specification<RoomTitleStatsView> typeSpec;
+        if (Boolean.TRUE.equals(params.getIsMyTypes())) {
+            typeSpec = RoomTitleStatsSpecifications.hasUserTypes(params.getTypes(), currentUserId);
+        } else {
+            typeSpec = RoomTitleStatsSpecifications.hasRoomTypes(params.getTypes());
+        }
+
+        Specification<RoomTitleStatsView> searchSpec = RoomTitleStatsSpecifications
+                .hasUserTitleNameLike(params.getSearch());
+
         Specification<RoomTitleStatsView> spec = Specification
                 .where(RoomTitleStatsSpecifications.hasRoomId(roomId))
-                .and(RoomTitleStatsSpecifications
-                        .hasStatus(params.getStatus() != null ? params.getStatus().name() : null))
-                .and(RoomTitleStatsSpecifications.hasUserTypes(params.getTypes(), currentUserId));
+                .and(statusSpec)
+                .and(typeSpec)
+                .and(searchSpec);
 
         Pageable pageable = PagingHelper.toPageable(params);
 
@@ -145,8 +164,17 @@ public class RoomTitleServiceImpl implements RoomTitleService {
         }
 
         List<RoomTitleEntity> entities = repository.findAllById(titleIds);
+
+        List<UUID> targetUserIds = new ArrayList<>();
+        if (params.getMemberIds() != null) {
+            targetUserIds.addAll(params.getMemberIds());
+        }
+        if (currentUserId != null && !targetUserIds.contains(currentUserId)) {
+            targetUserIds.add(currentUserId);
+        }
         List<RoomTitleLinkEntity> allLinks = linkRepository.findByRoomTitleIdInAndUserIdIn(titleIds,
-                params.getMemberIds());
+                targetUserIds);
+
         Map<UUID, List<RoomTitleLinkEntity>> linksByTitleId = allLinks.stream()
                 .collect(Collectors.groupingBy(l -> l.getRoomTitle().getId()));
         Map<UUID, RoomTitleEntity> entityMap = entities.stream()

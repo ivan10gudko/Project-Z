@@ -14,6 +14,7 @@ import project_z.demo.repositories.RoomMemberRepository;
 import project_z.demo.repositories.RoomRepository;
 import project_z.demo.repositories.RoomRequestRepository;
 import project_z.demo.repositories.RoomTitleEntityRepository;
+import project_z.demo.repositories.RoomTitleLinkRepository;
 import project_z.demo.repositories.SeasonRepository;
 import project_z.demo.repositories.TitleRepository;
 import project_z.demo.repositories.UserFavoriteTitleRepository;
@@ -32,6 +33,7 @@ public class SecurityService {
     private final WheelPresetRepository wheelPresetRepository;
     private final UserFavoriteTitleRepository userFavoriteTitleRepository;
     private final RoomTitleEntityRepository roomTitleRepository;
+    private final RoomTitleLinkRepository roomTitleLinkRepository;
 
     public UUID getCurrentUserId() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
@@ -58,6 +60,13 @@ public class SecurityService {
     public boolean isFriendshipMember(UUID friendshipId) {
         UUID currentUserId = getCurrentUserId();
         return friendshipRepository.isUserMemberOfFriendship(friendshipId, currentUserId);
+    }
+
+    public boolean isRoomTitleLinkOwner(UUID roomTitleLinkId) {
+        UUID currentUserId = getCurrentUserId();
+        return roomTitleLinkRepository.findById(roomTitleLinkId)
+                .map(link -> link.getUserTitleRecord().getUser().getUserId().equals(currentUserId))
+                .orElse(false);
     }
 
     public boolean canAcceptFriendRequest(UUID senderId) {

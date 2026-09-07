@@ -11,13 +11,18 @@ interface RoomFilterState {
     memberIds: string[];
     types: TitleType[];
     status?: Status;
-
+    isMyTypes: boolean;
+    isMyStatus: boolean;
+    search: string;
     setSort: (sortBy: RoomDetailsSortVariants) => void;
     toggleOrder: () => void;
     toggleType: (type: TitleType) => void;
     toggleMember: (memberId: string) => void;
     setMembers: (memberIds: string[]) => void;
     setStatus: (status: Status | undefined) => void;
+    setIsMyTypes: (isMyTypes: boolean) => void;
+    setIsMyStatus: (isMyStatus: boolean) => void;
+    setSearch: (search: string) => void;
     reset: () => void;
 }
 
@@ -29,7 +34,9 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
             sortBy: RoomDetailsSortVariants.avgRating,
             order: 'desc',
             memberIds: [],
-
+            isMyTypes: false,
+            isMyStatus: false,
+            search: '',
             setSort: (sortBy) => set({ sortBy }),
             toggleOrder: () => set((state) => ({
                 order: state.order === 'asc' ? 'desc' : 'asc'
@@ -41,6 +48,9 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
             })),
             setMembers: (memberIds) => set({ memberIds }),
             setStatus: (status) => set({ status }),
+            setIsMyTypes: (isMyTypes) => set({ isMyTypes }),
+            setIsMyStatus: (isMyStatus) => set({ isMyStatus }),
+            setSearch: (search) => set({ search }),
             toggleType: (type) => set((state) => ({
                 types: state.types.includes(type)
                     ? state.types.filter((t) => t !== type)
@@ -52,6 +62,9 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
                 sortBy: RoomDetailsSortVariants.avgRating,
                 order: 'desc',
                 memberIds: [],
+                isMyTypes: false,
+                isMyStatus: false,
+                search: '',
             }),
         }),
         {
@@ -63,6 +76,9 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
                 memberIds: state.memberIds,
                 types: state.types,
                 status: state.status,
+                isMyTypes: state.isMyTypes,
+                isMyStatus: state.isMyStatus,
+                search: state.search,
             }),
         }
     )
