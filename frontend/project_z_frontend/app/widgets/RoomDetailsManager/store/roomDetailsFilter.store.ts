@@ -9,6 +9,7 @@ interface RoomFilterState {
     sortBy: RoomDetailsSortVariants;
     order: SortOrder;
     memberIds: string[];
+    isAllMembers: boolean;
     types: TitleType[];
     status?: Status;
     isMyTypes: boolean;
@@ -17,8 +18,8 @@ interface RoomFilterState {
     setSort: (sortBy: RoomDetailsSortVariants) => void;
     toggleOrder: () => void;
     toggleType: (type: TitleType) => void;
-    toggleMember: (memberId: string) => void;
     setMembers: (memberIds: string[]) => void;
+    resetMembers: () => void;
     setStatus: (status: Status | undefined) => void;
     setIsMyTypes: (isMyTypes: boolean) => void;
     setIsMyStatus: (isMyStatus: boolean) => void;
@@ -34,6 +35,7 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
             sortBy: RoomDetailsSortVariants.avgRating,
             order: 'desc',
             memberIds: [],
+            isAllMembers: true,
             isMyTypes: false,
             isMyStatus: false,
             search: '',
@@ -41,12 +43,8 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
             toggleOrder: () => set((state) => ({
                 order: state.order === 'asc' ? 'desc' : 'asc'
             })),
-            toggleMember: (memberId) => set((state) => ({
-                memberIds: state.memberIds.includes(memberId)
-                    ? state.memberIds.filter((id) => id !== memberId)
-                    : [...state.memberIds, memberId]
-            })),
-            setMembers: (memberIds) => set({ memberIds }),
+            setMembers: (memberIds) => set({ memberIds, isAllMembers: false }),
+            resetMembers: () => set({ memberIds: [], isAllMembers: true }),
             setStatus: (status) => set({ status }),
             setIsMyTypes: (isMyTypes) => set({ isMyTypes }),
             setIsMyStatus: (isMyStatus) => set({ isMyStatus }),
@@ -62,6 +60,7 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
                 sortBy: RoomDetailsSortVariants.avgRating,
                 order: 'desc',
                 memberIds: [],
+                isAllMembers: true,
                 isMyTypes: false,
                 isMyStatus: false,
                 search: '',
@@ -74,6 +73,7 @@ export const useRoomDetailsFilterStore = create<RoomFilterState>()(
                 sortBy: state.sortBy,
                 order: state.order,
                 memberIds: state.memberIds,
+                isAllMembers: state.isAllMembers,
                 types: state.types,
                 status: state.status,
                 isMyTypes: state.isMyTypes,

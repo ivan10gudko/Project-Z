@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -21,9 +21,9 @@ interface RoomDetailsSidebarProps {
 }
 
 export const RoomDetailsSidebar = ({ room }: RoomDetailsSidebarProps) => {
-  const { reset } = useRoomDetailsFilterStore();
+  const { reset, memberIds, setMembers } = useRoomDetailsFilterStore();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-
+  const allMemberIds = room.members.map((m) => m.user.userId);
   return (
     <Sidebar className="w-80 bg-background p-5 rounded-3xl border border-border h-fit shadow-sm">
       <div className="flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-y-auto hide-scrollbar pb-6">
@@ -121,7 +121,7 @@ export const RoomDetailsSidebar = ({ room }: RoomDetailsSidebarProps) => {
             <Button
               variant="resetFilters"
               className="py-3 mt-1 flex items-center justify-center gap-2"
-              onClick={reset}
+              onClick={() => reset()}
             >
               <RefreshIcon className="text-sm" /> Reset all filters
             </Button>

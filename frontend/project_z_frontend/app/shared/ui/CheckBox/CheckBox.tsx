@@ -4,7 +4,7 @@ interface CheckboxProps extends Omit<
   ComponentProps<"input">,
   "onChange" | "value"
 > {
-  label?: string;
+  label?: React.ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
   error?: string;

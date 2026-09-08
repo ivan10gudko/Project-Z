@@ -3,16 +3,20 @@ import type { RoomTitleQueryParameters } from "../model/roomTitle.types";
 import { roomTitleService } from "../api/roomTitleService";
 import { roomTitleKeys } from "../model/roomTitle.queryKeys";
 
-export const useInfiniteRoomTitles = (roomId: number, params: RoomTitleQueryParameters) => {
+export const useInfiniteRoomTitles = (
+    roomId: number,
+    params: RoomTitleQueryParameters,
+    enabled: boolean = true
+) => {
     const queryKey = roomTitleKeys.list(roomId, params);
     return useInfiniteQuery({
         queryKey,
         queryFn: ({ pageParam }) => {
             const page = typeof pageParam === 'number' ? pageParam : 0;
-            
-            return roomTitleService.getRoomTitles(roomId, { 
-                ...params, 
-                page: page 
+
+            return roomTitleService.getRoomTitles(roomId, {
+                ...params,
+                page: page
             });
         },
         getNextPageParam: (lastPage) => {
@@ -23,5 +27,6 @@ export const useInfiniteRoomTitles = (roomId: number, params: RoomTitleQueryPara
         },
         initialPageParam: 0,
         staleTime: 1000 * 60 * 5,
+        enabled,
     });
 };
