@@ -45,7 +45,7 @@ export default function RoomsPage({ userId }: { userId: string | null }) {
   const isEmpty = !isLoading && allRooms.length === 0;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-8 max-w-[1400px] mx-auto min-h-screen bg-background-muted/30">
+    <div className="page-container">
       <FilterResponsiveWrapper pageTitle="My Rooms">
         <RoomFilters>
           <Button

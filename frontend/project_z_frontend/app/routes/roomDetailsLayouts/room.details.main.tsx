@@ -40,7 +40,7 @@ export default function RoomDetailsMainPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 md:gap-6 p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto min-h-[calc(100vh-64px)] bg-background-muted/30">
+    <div className="page-container">
       <div className="w-full lg:w-auto flex flex-col">
         <RoomDetailsSidebar room={room} />
       </div>

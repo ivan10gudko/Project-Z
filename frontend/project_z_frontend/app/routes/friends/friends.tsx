@@ -18,7 +18,7 @@ export default function FriendsLayout() {
     if (!userId) throw new Response("Not Found", { status: 404 });
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-8 max-w-[1400px] mx-auto min-h-screen bg-background-muted/30">
+        <div className="page-container">
             
             <div className="md:hidden w-full">
                 <button

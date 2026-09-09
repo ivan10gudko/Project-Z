@@ -23,7 +23,7 @@ const CONTACTS_CONFIG: ContactChannel[] = [
 
 export function ContactPage() {
   return (
-    <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-8 max-w-[1400px] mx-auto min-h-screen bg-background-muted/30">
+    <div className="page-container">
       <div className="max-w-2xl w-full mx-auto p-6 space-y-8">
         
         <header className="text-center space-y-2">

@@ -29,7 +29,7 @@ export default function RoomsSettingsIndexLayout() {
     }
 
     return (
-        <div className="relative flex flex-col md:flex-row gap-4 md:gap-6 p-4 md:p-6 max-w-[1400px] mx-auto min-h-[calc(100vh-64px)] bg-background-muted/30 overflow-x-hidden">
+        <div className="relative page-container overflow-x-hidden">
             {isMobileMenuOpen && (
                 <div 
                     className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-300"
