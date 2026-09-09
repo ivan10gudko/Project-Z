@@ -1,29 +1,26 @@
 package project_z.demo.services.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.swagger.v3.oas.models.parameters.QueryParameter;
+
 import lombok.RequiredArgsConstructor;
+import project_z.demo.JavaUtil.CollectionUtils;
 import project_z.demo.JavaUtil.PagingHelper;
-import project_z.demo.JavaUtil.TitleSortingUtils;
+
 import project_z.demo.Mappers.Mapper;
-import project_z.demo.Mappers.impl.RoomTitleMappers.RoomTitleDetailsMapper;
 import project_z.demo.Mappers.impl.RoomTitleMappers.RoomTitleSummaryMapper;
 import project_z.demo.Mappers.impl.RoomTitleMappers.RoomTitleUpdateMapperImpl;
 import project_z.demo.common.Exceptions.ResourceNotFoundException;
@@ -35,11 +32,11 @@ import project_z.demo.dto.RoomTitleDtos.RoomTitleDetailsDto;
 import project_z.demo.dto.RoomTitleDtos.RoomTitleShortDto;
 import project_z.demo.dto.RoomTitleDtos.RoomTitleSummaryDto;
 import project_z.demo.dto.RoomTitleDtos.RoomTitleUpdateDto;
-import project_z.demo.dto.RoomTitleDtos.RoomTitleUserIdAndTitleStatusDto;
+
 import project_z.demo.dto.RoomTitleDtos.RoomTitleWithUserLinksDto;
 import project_z.demo.dto.RoomTitleDtos.RoomTitlesResponseDto;
 import project_z.demo.dto.RoomTitleLinkDtos.RoomTitleLinkShortDto;
-import project_z.demo.dto.TitleDtos.TitleDto;
+
 import project_z.demo.dto.TitleDtos.TitleSameCriteriaDto;
 import project_z.demo.dto.TitleDtos.TitleShortDto;
 import project_z.demo.dto.UserDtos.UserShortDto;
@@ -128,46 +125,19 @@ public class RoomTitleServiceImpl implements RoomTitleService {
         if (roomId == null) {
             throw new ResourceNotFoundException("room not found");
         }
-        Specification<RoomTitleStatsView> spec = Specification
-                .where(RoomTitleStatsSpecifications.hasRoomId(roomId))
-                .and(RoomTitleStatsSpecifications
-                        .hasStatus(params.getStatus() != null ? params.getStatus().name() : null))
-                .and(RoomTitleStatsSpecifications.hasUserTypes(params.getTypes(), currentUserId));
 
+        Specification<RoomTitleStatsView> spec = buildSpecification(roomId, currentUserId, params);
         Pageable pageable = PagingHelper.toPageable(params);
+        Page<RoomTitleStatsView> statsPage = roomTitleStatsRepository.findAll(spec, pageable);
 
-        Page<RoomTitleStatsView> result = roomTitleStatsRepository.findAll(spec, pageable);
-        List<UUID> titleIds = new ArrayList<>();
-        for (RoomTitleStatsView item : result.getContent()) {
-            if (item.getId() != null) {
-                titleIds.add(item.getId());
-            }
-        }
+        List<UUID> titleIds = CollectionUtils.extractIds(statsPage.getContent(), RoomTitleStatsView::getId);
+        Map<UUID, RoomTitleEntity> entityMap = fetchEntityMap(titleIds);
+        List<RoomTitleLinkEntity> links = fetchLinks(titleIds, currentUserId, params.getMemberIds());
+        Map<UUID, List<RoomTitleLinkEntity>> linksByTitleId = CollectionUtils.groupBy(links, l -> l.getRoomTitle().getId());
+        Map<UUID, UserShortDto> usersCache = buildUsersCache(links);
 
-        List<RoomTitleEntity> entities = repository.findAllById(titleIds);
-        List<RoomTitleLinkEntity> allLinks = linkRepository.findByRoomTitleIdInAndUserIdIn(titleIds,
-                params.getMemberIds());
-        Map<UUID, List<RoomTitleLinkEntity>> linksByTitleId = allLinks.stream()
-                .collect(Collectors.groupingBy(l -> l.getRoomTitle().getId()));
-        Map<UUID, RoomTitleEntity> entityMap = entities.stream()
-                .collect(Collectors.toMap(RoomTitleEntity::getId, e -> e));
-
-        Map<UUID, UserShortDto> usersCache = allLinks.stream()
-                .map(link -> link.getUserTitleRecord().getUser())
-                .distinct()
-                .collect(Collectors.toMap(
-                        UserEntity::getUserId,
-                        user -> userShortMapper.mapTo(user),
-                        (existing, replacement) -> existing));
-
-        Page<RoomTitleSummaryDto> page = result.map(statsView -> {
-            RoomTitleEntity entity = entityMap.get(statsView.getId());
-            if (entity == null)
-                return null;
-
-            Double avg = statsView.getAvgRating() != null ? statsView.getAvgRating() : 0.0;
-            return roomTitleSummaryMapper.mapTo(entity, avg, linksByTitleId, currentUserId, params.getStatus());
-        });
+        Page<RoomTitleSummaryDto> page = statsPage.map(
+                statsView -> mapToSummary(statsView, entityMap, linksByTitleId, currentUserId, params.getStatus()));
 
         return new RoomTitlesResponseDto(page, usersCache);
     }
@@ -190,20 +160,83 @@ public class RoomTitleServiceImpl implements RoomTitleService {
                 .and(RoomTitleSpecifications.hasTitleNameLike(queryParameters.getSearch()));
 
         Page<RoomTitleEntity> titlePage = repository.findAll(spec, pageable);
-        List<UUID> titleIds = titlePage.getContent().stream().map(RoomTitleEntity::getId).toList();
+        List<UUID> titleIds = CollectionUtils.extractIds(titlePage.getContent(), RoomTitleEntity::getId);
 
-        List<RoomTitleLinkEntity> links = linkRepository.findByRoomTitle_IdInAndUserTitleRecord_User_UserId(titleIds,
-                userId);
-
-        Map<UUID, List<RoomTitleLinkEntity>> linksMap = links.stream()
-                .collect(Collectors.groupingBy(l -> l.getRoomTitle().getId()));
-
-        return titlePage.map(entity -> {
-            RoomTitleWithUserLinksDto dto = roomTitleWithUserLinksMapper.mapTo(entity);
-            dto.setLinks(linksMap.getOrDefault(entity.getId(), List.of()).stream()
-                    .map(roomTitleLinkShortMapper::mapTo)
-                    .collect(Collectors.toList()));
-            return dto;
-        });
+        List<RoomTitleLinkEntity> links = linkRepository
+                .findByRoomTitle_IdInAndUserTitleRecord_User_UserId(titleIds, userId);
+        Map<UUID, List<RoomTitleLinkEntity>> linksMap = CollectionUtils.groupBy(links, l -> l.getRoomTitle().getId());
+        return titlePage.map(entity -> mapToWithUserLinksDto(entity, linksMap));
     }
+
+    // ---- helpers
+
+    private RoomTitleWithUserLinksDto mapToWithUserLinksDto(RoomTitleEntity entity,
+            Map<UUID, List<RoomTitleLinkEntity>> linksMap) {
+        RoomTitleWithUserLinksDto dto = roomTitleWithUserLinksMapper.mapTo(entity);
+        dto.setLinks(mapLinksToShortDtos(linksMap.getOrDefault(entity.getId(), List.of())));
+        return dto;
+    }
+
+    private List<RoomTitleLinkShortDto> mapLinksToShortDtos(List<RoomTitleLinkEntity> links) {
+        return links.stream()
+                .map(roomTitleLinkShortMapper::mapTo)
+                .collect(Collectors.toList());
+    }
+
+    private Specification<RoomTitleStatsView> buildSpecification(Long roomId, UUID currentUserId,
+            RoomTitlesQueryParameters params) {
+        String statusName = params.getStatus() != null ? params.getStatus().name() : null;
+
+        Specification<RoomTitleStatsView> statusSpec = Boolean.TRUE.equals(params.getIsMyStatus())
+                ? RoomTitleStatsSpecifications.hasMyStatus(statusName, currentUserId)
+                : RoomTitleStatsSpecifications.hasStatus(statusName);
+
+        Specification<RoomTitleStatsView> typeSpec = Boolean.TRUE.equals(params.getIsMyTypes())
+                ? RoomTitleStatsSpecifications.hasUserTypes(params.getTypes(), currentUserId)
+                : RoomTitleStatsSpecifications.hasRoomTypes(params.getTypes());
+
+        Specification<RoomTitleStatsView> searchSpec = RoomTitleStatsSpecifications
+                .hasUserTitleNameLike(params.getSearch());
+
+        return Specification.where(RoomTitleStatsSpecifications.hasRoomId(roomId))
+                .and(statusSpec)
+                .and(typeSpec)
+                .and(searchSpec);
+    }
+
+    private Map<UUID, RoomTitleEntity> fetchEntityMap(List<UUID> titleIds) {
+        return CollectionUtils.toMapById(repository.findAllById(titleIds), RoomTitleEntity::getId);
+    }
+
+    private Map<UUID, UserShortDto> buildUsersCache(List<RoomTitleLinkEntity> links) {
+        List<UserEntity> users = links.stream()
+                .map(link -> link.getUserTitleRecord().getUser())
+                .distinct()
+                .toList();
+        return CollectionUtils.toMapById(users, UserEntity::getUserId, userShortMapper::mapTo);
+    }
+
+    private List<RoomTitleLinkEntity> fetchLinks(List<UUID> titleIds, UUID currentUserId, List<UUID> memberIds) {
+        List<UUID> targetUserIds = new ArrayList<>();
+        if (memberIds != null) {
+            targetUserIds.addAll(memberIds);
+        }
+        if (currentUserId != null && !targetUserIds.contains(currentUserId)) {
+            targetUserIds.add(currentUserId);
+        }
+        return linkRepository.findByRoomTitleIdInAndUserIdIn(titleIds, targetUserIds);
+    }
+
+
+    private RoomTitleSummaryDto mapToSummary(RoomTitleStatsView statsView, Map<UUID, RoomTitleEntity> entityMap,
+            Map<UUID, List<RoomTitleLinkEntity>> linksByTitleId,
+            UUID currentUserId, TitleStatus status) {
+        RoomTitleEntity entity = entityMap.get(statsView.getId());
+        if (entity == null) {
+            return null;
+        }
+        Double avg = statsView.getAvgRating() != null ? statsView.getAvgRating() : 0.0;
+        return roomTitleSummaryMapper.mapTo(entity, avg, linksByTitleId, currentUserId, status);
+    }
+
 }

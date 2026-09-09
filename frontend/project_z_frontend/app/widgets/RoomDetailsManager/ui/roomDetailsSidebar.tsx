@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -12,6 +12,7 @@ import { RoomDetailsSortControl } from './RoomDetailsFiltersModules/RoomDetailsS
 import { RoomDetailsTypeFilter } from './RoomDetailsFiltersModules/RoomDetailsTypeFilter';
 import { RoomDetailsStatusFilter } from './RoomDetailsFiltersModules/RoomDetailsStatusFilter';
 import { RoomDetailsMemberFilter } from './RoomDetailsFiltersModules/RoomDetailsMembersFilter';
+import { RoomDetailsSearchFilter } from './RoomDetailsFiltersModules/RoomDetailsSearchFilter';
 import { useRoomDetailsFilterStore } from '../store/roomDetailsFilter.store';
 import { RoomMembersList } from '~/features/manageRoomMembers';
 
@@ -20,14 +21,14 @@ interface RoomDetailsSidebarProps {
 }
 
 export const RoomDetailsSidebar = ({ room }: RoomDetailsSidebarProps) => {
-  const { reset } = useRoomDetailsFilterStore();
+  const { reset, memberIds, setMembers } = useRoomDetailsFilterStore();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-
+  const allMemberIds = room.members.map((m) => m.user.userId);
   return (
     <Sidebar className="w-80 bg-background p-5 rounded-3xl border border-border h-fit shadow-sm">
       <div className="flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-y-auto hide-scrollbar pb-6">
-        
-      
+
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
@@ -54,14 +55,14 @@ export const RoomDetailsSidebar = ({ room }: RoomDetailsSidebarProps) => {
               active:scale-95
             "
           >
-            <SettingsIcon fontSize="small"/>
+            <SettingsIcon fontSize="small" />
           </Link>
         </div>
 
         <RoomMembersList members={room.members} />
 
         <div className="pt-5 border-t border-border/60 flex flex-col gap-5">
-          
+
           <Button
             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
             className="
@@ -106,20 +107,21 @@ export const RoomDetailsSidebar = ({ room }: RoomDetailsSidebarProps) => {
 
           {isFiltersOpen && (
             <div className="flex flex-col gap-4 animate-fadeIn">
-             
+
               <RoomDetailsStatusFilter />
               <RoomDetailsTypeFilter />
             </div>
           )}
 
           <div className="flex flex-col gap-4">
+            <RoomDetailsSearchFilter />
             <RoomDetailsMemberFilter members={room.members} />
             <RoomDetailsSortControl />
 
-            <Button 
-              variant="resetFilters" 
-              className="py-3 mt-1 flex items-center justify-center gap-2" 
-              onClick={reset}
+            <Button
+              variant="resetFilters"
+              className="py-3 mt-1 flex items-center justify-center gap-2"
+              onClick={() => reset()}
             >
               <RefreshIcon className="text-sm" /> Reset all filters
             </Button>

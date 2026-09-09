@@ -11,27 +11,25 @@ import { useRoomDetailsFilterStore } from "~/widgets/RoomDetailsManager/store/ro
 
 export default function RoomDetailsMainPage() {
   const { id } = useParams<{ id: string }>();
-
   const roomId = id ? Number(id) : undefined;
 
-  if (!roomId)
-    return (
-      <ErrorScreen title="Not found" message="Room with that id not found" />
-    );
-
-
-  const { setMembers } = useRoomDetailsFilterStore();
+  const { resetMembers } = useRoomDetailsFilterStore();
   const prevRoomId = useRef<string | undefined>(undefined);
+  const { room, isLoading } = useRoomDetails(roomId);
 
   useEffect(() => {
     if (roomId && prevRoomId.current !== id) {
-      setMembers([]);
+      resetMembers();
     }
     prevRoomId.current = id;
-  }, [roomId, setMembers]);
+  }, [roomId, resetMembers]);
 
-  const { room, isLoading } = useRoomDetails(roomId);
-  const { data } = useRoomTitlesQuery(roomId);
+  const allMemberIds = room?.members.map((m) => m.user.userId) ?? [];
+  const { data } = useRoomTitlesQuery(roomId, allMemberIds, !!room);
+
+  if (!roomId) {
+    return <ErrorScreen title="Not found" message="Room with that id not found" />;
+  }
 
   if (isLoading || !room) {
     return (
@@ -46,7 +44,6 @@ export default function RoomDetailsMainPage() {
       <div className="w-full lg:w-auto flex flex-col">
         <RoomDetailsSidebar room={room} />
       </div>
-
       <Outlet />
     </div>
   );

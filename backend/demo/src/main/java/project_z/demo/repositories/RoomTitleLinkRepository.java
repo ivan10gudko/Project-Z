@@ -11,7 +11,12 @@ import project_z.demo.entity.RoomTitleLinkEntity;
 import project_z.demo.entity.UserEntity;
 
 public interface RoomTitleLinkRepository extends JpaRepository<RoomTitleLinkEntity, UUID> {
-        boolean existsByUserTitleRecord_TitleIdAndRoomTitle_Id(Long titleId, UUID roomTitleId);
+        @Query("SELECT COUNT(l) > 0 FROM RoomTitleLinkEntity l " +
+                        "JOIN l.userTitleRecord t " +
+                        "WHERE l.roomTitle.id = :roomTitleId " +
+                        "AND t.user.userId = :userId")
+        boolean existsByRoomTitleIdAndUserId(@Param("roomTitleId") UUID roomTitleId,
+                        @Param("userId") UUID userId);
 
         List<RoomTitleLinkEntity> findByRoomTitle_Id(UUID roomTitleId);
 
