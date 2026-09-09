@@ -19,7 +19,6 @@ import project_z.demo.dto.RoomTitleLinkDtos.SuggestedTitleLinkDto;
 import project_z.demo.entity.RoomTitleEntity;
 import project_z.demo.entity.RoomTitleLinkEntity;
 import project_z.demo.entity.TitleEntity;
-import project_z.demo.enums.TitleStatus;
 import project_z.demo.repositories.RoomTitleEntityRepository;
 import project_z.demo.repositories.RoomTitleLinkRepository;
 import project_z.demo.repositories.Specifications.RoomTitleSpecifications;
@@ -42,18 +41,23 @@ public class RoomTitleLinkServiceImpl implements RoomTitleLinkService {
     @Override
     @Transactional
     public RoomTitleLinkDetailsDto createLink(RoomTitleLinkCreateDto dto) {
-        if(repository.existsByUserTitleRecord_TitleIdAndRoomTitle_Id(dto.getTitleId(), dto.getRoomTitleId())){
-            throw new RoomTitleLinkAlreadyExistsException("link between this title and room title adlready exists");
-        }
+
         var userTitle = titleRepository.findById(dto.getTitleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Title record not found with id: " + dto.getTitleId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Title record not found with id: " + dto.getTitleId()));
+        if (repository.existsByRoomTitleIdAndUserId(dto.getRoomTitleId(), userTitle.getUser().getUserId())) {
+            String roomTitleName = roomTitleRepository.findTitleNameByRoomTitleId(dto.getRoomTitleId());
+            throw new RoomTitleLinkAlreadyExistsException("Already linked to slot: " + roomTitleName);
+        }
 
         var roomTitle = roomTitleRepository.findById(dto.getRoomTitleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Room title not found with id: " + dto.getRoomTitleId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Room title not found with id: " + dto.getRoomTitleId()));
 
         RoomTitleLinkEntity entity = new RoomTitleLinkEntity();
         entity.setUserTitleRecord(userTitle);
         entity.setRoomTitle(roomTitle);
+
         return mapper.mapTo(repository.save(entity));
     }
 
@@ -61,13 +65,20 @@ public class RoomTitleLinkServiceImpl implements RoomTitleLinkService {
     @Transactional
     public List<RoomTitleLinkDetailsDto> batchCreateLinks(RoomTitleLinkBatchCreateDto dto) {
         List<RoomTitleLinkEntity> entities = dto.getLinks().stream()
-                .filter(linkDto -> !repository.existsByUserTitleRecord_TitleIdAndRoomTitle_Id(
-                        linkDto.getTitleId(), linkDto.getRoomTitleId()))
                 .map(linkDto -> {
                     var userTitle = titleRepository.findById(linkDto.getTitleId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Title record not found with id: " + linkDto.getTitleId()));
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "Title record not found with id: " + linkDto.getTitleId()));
+
+                    if (repository.existsByRoomTitleIdAndUserId(linkDto.getRoomTitleId(),
+                            userTitle.getUser().getUserId())) {
+                        String roomTitleName = roomTitleRepository.findTitleNameByRoomTitleId(linkDto.getRoomTitleId());
+                        throw new RoomTitleLinkAlreadyExistsException("Already linked to slot: " + roomTitleName);
+                    }
+
                     var roomTitle = roomTitleRepository.findById(linkDto.getRoomTitleId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Room title not found with id: " + linkDto.getRoomTitleId()));
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "Room title not found with id: " + linkDto.getRoomTitleId()));
 
                     RoomTitleLinkEntity entity = new RoomTitleLinkEntity();
                     entity.setUserTitleRecord(userTitle);
@@ -99,8 +110,7 @@ public class RoomTitleLinkServiceImpl implements RoomTitleLinkService {
     @Transactional
     public void deleteLink(UUID roomTitleLinkId) {
         RoomTitleLinkEntity entity = repository.findById(roomTitleLinkId).orElseThrow(
-            () -> new ResourceNotFoundException("Room title link not found")
-        );
+                () -> new ResourceNotFoundException("Room title link not found"));
         repository.delete(entity);
     }
 

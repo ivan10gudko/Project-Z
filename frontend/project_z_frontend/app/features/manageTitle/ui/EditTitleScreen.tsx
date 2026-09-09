@@ -12,8 +12,6 @@ import type { Rating } from "~/shared/types";
 import TitleTypeSelect from "~/entities/titleRecord/ui/TitleTypeSelect";
 import { ImageUrlField } from "~/shared/ui/imageUrlField";
 import { useNavigate } from "react-router";
-import CloseIcon from "@mui/icons-material/Close";
-
 interface EditTitleScreenProps {
   title: TitleRecord;
 }

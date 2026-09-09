@@ -91,7 +91,7 @@ export const RoomTitleReadOnlyRowShort = ({
         <div className="w-full flex flex-col gap-2 p-3 bg-black/25 border-t border-border/40 animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="flex items-center justify-between px-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Linked titles ({title.links?.length || 0})
+              Linked title
             </span>
           </div>
 

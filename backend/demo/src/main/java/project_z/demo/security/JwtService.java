@@ -6,11 +6,19 @@ import java.util.UUID;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import project_z.demo.enums.UserRole;
+
 @Service
-public interface  JwtService {
+public interface JwtService {
     String generateToken(UserDetails user);
+
     boolean validateToken(String token);
+
     UUID extractUsername(String token);
+
     Key getSigningKey(String token);
-    String extractRole(UUID userId);
+
+    UserRole extractRole(UUID userId);
+
+    UserRole getCurrentUserRole();
 }

@@ -5,8 +5,11 @@ import type { PageResponse, QueryParams, Status } from "~/shared/types";
 
 export interface RoomTitleQueryParameters extends QueryParams {
     types: TitleType[];
+    isMyTypes?: boolean;
     status?: Status;
+    isMyStatus?: boolean;
     memberIds: string[];
+    search?: string;
 }
 
 export interface RoomTitleShort {

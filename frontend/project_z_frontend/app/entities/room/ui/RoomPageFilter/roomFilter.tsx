@@ -1,10 +1,8 @@
-import { Divider } from "@mui/material";
 import { Button } from "~/shared/ui/Button";
 import { useRoomFilterStore } from "../../store/rooms.store";
 import { RoomSearch } from "./roomSearch";
 import { RoomSort } from "./sortControl";
 import type { ReactNode } from "react";
-
 
 interface RoomFiltersProps {
   children?: ReactNode;
@@ -18,16 +16,11 @@ export const RoomFilters = ({ children }: RoomFiltersProps) => {
       <RoomSearch />
       <RoomSort />
 
-      <Divider sx={{ my: 1 }} />
-
-      <Button
-        onClick={reset}
-        variant="resetFilters"
-      >
+      <Button onClick={reset} variant="resetFilters" className="mt-4 lg:mt-8">
         Reset all filters
       </Button>
 
-     <div className="h-px bg-border/80 my-0" />
+      <div className="h-px bg-border/80 my-0" />
 
       {children && <div className="flex flex-col  gap-3 pt-2">{children}</div>}
     </div>

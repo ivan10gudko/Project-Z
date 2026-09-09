@@ -39,7 +39,7 @@ export const MembersStep = ({
             userId: p.userId,
             name: p.name,
             nameTag: p.nameTag,
-            img: p.img,
+            img: p.img ?? undefined,
           })}
           onSelect={(user) => {
             

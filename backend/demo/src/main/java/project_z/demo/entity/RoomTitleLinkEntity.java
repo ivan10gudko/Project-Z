@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
@@ -22,24 +23,25 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "room_title_links", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_title_record_id", "room_title_id"})
+        @UniqueConstraint(columnNames = { "user_title_record_id", "room_title_id" })
 })
-@Getter @Setter
+@Getter
+@Setter
 @EntityListeners(AuditingEntityListener.class)
 public class RoomTitleLinkEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_title_record_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_title_record_id", nullable = false, unique = true)
     private TitleEntity userTitleRecord;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_title_id", nullable = false)
     private RoomTitleEntity roomTitle;
-    
+
     @CreatedDate
-    @Column(name = "created_at",nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

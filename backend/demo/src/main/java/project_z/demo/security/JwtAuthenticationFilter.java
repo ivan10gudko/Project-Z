@@ -16,44 +16,50 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import project_z.demo.enums.UserRole;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     private final JwtService jwtService;
     private final HandlerExceptionResolver resolver;
 
-    public JwtAuthenticationFilter(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, JwtService jwtService) {
+    public JwtAuthenticationFilter(@Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver,
+            JwtService jwtService) {
         this.resolver = resolver;
         this.jwtService = jwtService;
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  FilterChain filterChain) throws ServletException, IOException {
-        
-    String authHeader = request.getHeader("Authorization");
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        filterChain.doFilter(request, response);
-        return;
-    }
+        String authHeader = request.getHeader("Authorization");
 
-    try{
-        if (jwtService.validateToken(authHeader)) {
-            UUID userId = jwtService.extractUsername(authHeader); 
-            String roleFromToken = jwtService.extractRole(userId);
-
-            UsernamePasswordAuthenticationToken auth = 
-                new UsernamePasswordAuthenticationToken(userId, null, 
-                    List.of(new SimpleGrantedAuthority("ROLE_" + roleFromToken)));
-            
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-    filterChain.doFilter(request, response);
-    }catch(Exception e){
-        resolver.resolveException(request, response, null, e);
-    }
+        try {
+            if (jwtService.validateToken(authHeader)) {
+                UUID userId = jwtService.extractUsername(authHeader);
+
+                UserRole userRole = jwtService.extractRole(userId);
+                String roleName = (userRole != null) ? userRole.name() : "USER";
+
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        userId,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + roleName)));
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            resolver.resolveException(request, response, null, e);
+        }
     }
 }

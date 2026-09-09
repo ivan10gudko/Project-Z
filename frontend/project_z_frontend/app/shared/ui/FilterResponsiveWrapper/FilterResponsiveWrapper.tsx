@@ -1,5 +1,4 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import CloseIcon from "@mui/icons-material/Close";
 import { Button } from "~/shared/ui/Button";
 import { useState, type ReactNode } from "react";
 
@@ -26,11 +25,7 @@ export const FilterResponsiveWrapper = ({
         <h1 className="text-2xl font-black text-foreground tracking-tight">
           {pageTitle}
         </h1>
-        <Button
-          onClick={() => setIsOpen(true)}
-          variant="accept"
-          className=""
-        >
+        <Button onClick={() => setIsOpen(true)} variant="accept" className="">
           <FilterListIcon sx={{ fontSize: 20 }} />
           <span className="font-bold text-sm">Filters</span>
         </Button>
@@ -56,10 +51,7 @@ export const FilterResponsiveWrapper = ({
         `}
         >
           <div className="p-5 lg:p-0 lg:h-auto overflow-y-auto lg:overflow-visible flex flex-col gap-6">
-            <div className="lg:hidden flex justify-between items-center pt-6 p-5 border-b border-border bg-transparent">
-              
-             
-            </div>
+            <div className="lg:hidden flex justify-between items-center pt-6 p-5 border-b border-border bg-transparent"></div>
             <div>{children}</div>
 
             {actionButtons && actionButtons.length > 0 && (
