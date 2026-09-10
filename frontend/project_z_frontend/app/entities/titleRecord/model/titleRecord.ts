@@ -31,7 +31,11 @@ export interface TitleVisual {
     imageUrl: string;
     titleType: TitleType;
 }
-
+export interface TitlePositionUpdate {
+    customOrder: number;
+    newIndex: number;
+    sortMode: string;
+}
 export const titleTypeOptions = [
     { value: TitleType.ANIME, label: "Anime" },
     { value: TitleType.MANGA, label: "Manga" },

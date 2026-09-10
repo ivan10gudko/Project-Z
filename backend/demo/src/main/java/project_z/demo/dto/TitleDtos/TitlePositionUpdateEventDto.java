@@ -12,4 +12,6 @@ import lombok.Setter;
 public class TitlePositionUpdateEventDto {
     private Long titleId;
     private Double customOrder;
+    private Integer newIndex;
+    private String sortMode;
 }

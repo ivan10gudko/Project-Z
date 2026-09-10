@@ -1,57 +1,69 @@
 package project_z.demo.services;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import lombok.RequiredArgsConstructor;
 import project_z.demo.config.AppConfig;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Service
 @RequiredArgsConstructor
 public class SseHubService<E extends Enum<E>> {
     private final AppConfig appConfig;
-    private final Map<UUID, Map<String, SseEmitter>> userSessions = new ConcurrentHashMap<>();
+    private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    public SseEmitter register(UUID userId, String sessionId) {
+    private final Map<UUID, Set<String>> userSubscribers = new ConcurrentHashMap<>();
+
+    public SseEmitter register(String sessionId) {
         SseEmitter emitter = new SseEmitter(appConfig.getTimeoutTime());
+        emitters.put(sessionId, emitter);
 
-        userSessions.computeIfAbsent(userId, k -> new ConcurrentHashMap<>()).put(sessionId, emitter);
-
-        emitter.onCompletion(() -> removeSession(userId, sessionId));
-        emitter.onTimeout(() -> removeSession(userId, sessionId));
-        emitter.onError(ex -> removeSession(userId, sessionId));
+        emitter.onCompletion(() -> removeSession(sessionId));
+        emitter.onTimeout(() -> removeSession(sessionId));
+        emitter.onError(e -> removeSession(sessionId));
 
         return emitter;
     }
 
-    private void removeSession(UUID userId, String sessionId) {
-        Map<String, SseEmitter> sessions = userSessions.get(userId);
-        if (sessions != null) {
-            sessions.remove(sessionId);
-            if (sessions.isEmpty()) {
-                userSessions.remove(userId);
+    public void subscribe(String sessionId, UUID targetUserId) {
+        userSubscribers.computeIfAbsent(targetUserId, k -> ConcurrentHashMap.newKeySet()).add(sessionId);
+    }
+
+    public void unsubscribe(String sessionId, UUID targetUserId) {
+        Set<String> subs = userSubscribers.get(targetUserId);
+        if (subs != null) {
+            subs.remove(sessionId);
+        }
+    }
+
+    private void removeSession(String sessionId) {
+        emitters.remove(sessionId);
+        userSubscribers.values().forEach(subs -> subs.remove(sessionId));
+    }
+
+    public <T> void sendEvent(UUID targetUserId, E eventType, T data) {
+        Set<String> subscriberSessionIds = userSubscribers.get(targetUserId);
+        if (subscriberSessionIds == null || subscriberSessionIds.isEmpty()) {
+            return;
+        }
+
+        for (String sessionId : subscriberSessionIds) {
+            SseEmitter emitter = emitters.get(sessionId);
+            if (emitter != null) {
+                try {
+                    emitter.send(SseEmitter.event().name(eventType.toString()).data(data));
+                } catch (IOException e) {
+                    emitter.complete();
+                    removeSession(sessionId);
+                }
             }
         }
     }
 
-    public <T> void sendEvent(UUID userId, E eventType, T data) {
-        Map<String, SseEmitter> sessions = userSessions.get(userId);
-        if (sessions == null) return;
-
-        sessions.forEach((sessionId, emitter) -> {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name(eventType.name())
-                        .data(data));
-            } catch (IOException e) {
-                removeSession(userId, sessionId);
-                emitter.completeWithError(e);
-            }
-        });
-    }
 }

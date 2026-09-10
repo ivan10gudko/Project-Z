@@ -180,7 +180,7 @@ public class TitleController {
     public ResponseEntity<Void> titlePositionUpdate(
             @PathVariable("titleId") Long titleId,
             @RequestBody TitlePositionUpdateDto titleDto) {
-        titleService.titlePositionUpdate(titleDto.getCustomOrder(), titleId);
+        titleService.titlePositionUpdate(titleDto, titleId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

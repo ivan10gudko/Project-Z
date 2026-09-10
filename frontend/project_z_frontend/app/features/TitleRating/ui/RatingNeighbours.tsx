@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { useSameCriteriaRating } from "../hooks/useSameCriteriaRating";
-import { useNavigate } from "react-router"; // Додано useNavigate
+import { useNavigate } from "react-router";
 
 interface RatingNeighborsProps {
   titleId: number;
   category: string;
   ratingValue: number;
   onClose?: () => void;
+  onTitleChange?: (newTitleId: number) => void;
 }
 
 export const RatingNeighborsContent = ({
@@ -15,9 +16,10 @@ export const RatingNeighborsContent = ({
   category,
   ratingValue,
   onClose,
+  onTitleChange,
 }: RatingNeighborsProps) => {
   const { data, isLoading } = useSameCriteriaRating(titleId, category, ratingValue);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const neighbors = data?.titles ?? [];
   const averageRating = data?.avgRating ?? 0;
@@ -82,12 +84,13 @@ export const RatingNeighborsContent = ({
                 ref={isCurrent ? currentItemRef : null}
                 onClick={() => {
                   if (!isCurrent) {
+                    onTitleChange?.(item.titleId); 
                     navigate(`../rating/${item.titleId}`);
                   }
                 }}
                 className={`flex items-center justify-between px-2.5 py-1.5 rounded-md transition-all text-xs gap-2 ${isCurrent
-                    ? "bg-primary/20 border border-primary/40 font-black text-primary shadow-sm cursor-default"
-                    : "text-foreground/90 font-semibold hover:bg-border/30 cursor-pointer"
+                  ? "bg-primary/20 border border-primary/40 font-black text-primary shadow-sm cursor-default"
+                  : "text-foreground/90 font-semibold hover:bg-border/30 cursor-pointer"
                   }`}
               >
                 <span className="truncate flex items-center gap-1 flex-1 min-w-0">

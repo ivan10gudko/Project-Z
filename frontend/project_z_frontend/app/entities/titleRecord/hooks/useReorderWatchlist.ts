@@ -13,6 +13,9 @@ export const useReorderWatchlist = (titles: TitleRecord[], queryKey: unknown[], 
   const [optimisticTitles, setOptimisticTitles] = useState<TitleRecord[]>(titles);
   const isMutating = useRef(false);
 
+  const sortMode = searchParams.get('order') || 'asc';
+  const isDesc = sortMode === 'desc';
+
   useEffect(() => {
     if (isMutating.current) return;
 
@@ -28,7 +31,6 @@ export const useReorderWatchlist = (titles: TitleRecord[], queryKey: unknown[], 
     reordered.splice(destinationIndex, 0, moved);
 
     const movedTitleId = optimisticTitles[sourceIndex].titleId;
-    const isDesc = (searchParams.get('order') || 'asc') === 'desc';
     const newOrderValue = calculateNewOrder(reordered, destinationIndex, movedTitleId, isDesc);
 
     if (newOrderValue === null) {
@@ -60,7 +62,11 @@ export const useReorderWatchlist = (titles: TitleRecord[], queryKey: unknown[], 
     );
 
     try {
-      await titleRecordService.patchCustomOrder(movedTitleId, newOrderValue);
+      await titleRecordService.patchCustomOrder(movedTitleId, {
+        customOrder: newOrderValue,
+        newIndex: destinationIndex,
+        sortMode,
+      });
     } catch {
       setOptimisticTitles(titles);
       await queryClient.invalidateQueries({ queryKey });

@@ -217,14 +217,18 @@ public class TitleServiceImpl implements TitleService {
 
     @Override
     @Transactional
-    public void titlePositionUpdate(Double newPosition, Long titleId) {
+    public void titlePositionUpdate(TitlePositionUpdateDto titleDto, Long titleId) {
         TitleEntity titleEntity = titleRepository.findById(titleId).orElseThrow(
                 () -> new ResourceNotFoundException("title not found"));
-        titleEntity.setCustomOrder(newPosition);
+        titleEntity.setCustomOrder(titleDto.getCustomOrder());
         titleRepository.save(titleEntity);
 
-        TitlePositionUpdateEventDto positionDto = new TitlePositionUpdateEventDto(titleId, newPosition);
-        eventPublisher.publishEvent(new TitlePositionUpdatedEvent(titleEntity.getUser().getUserId(), positionDto));
+        TitlePositionUpdateEventDto eventDto = new TitlePositionUpdateEventDto(
+                titleId,
+                titleDto.getCustomOrder(),
+                titleDto.getNewIndex(),
+                titleDto.getSortMode());
+        eventPublisher.publishEvent(new TitlePositionUpdatedEvent(titleEntity.getUser().getUserId(), eventDto));
     }
 
     @Override

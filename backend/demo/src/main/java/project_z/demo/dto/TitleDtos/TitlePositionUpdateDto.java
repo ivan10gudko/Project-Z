@@ -9,4 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TitlePositionUpdateDto {
     private Double customOrder;
+    private Integer newIndex;
+    private String sortMode;
 }

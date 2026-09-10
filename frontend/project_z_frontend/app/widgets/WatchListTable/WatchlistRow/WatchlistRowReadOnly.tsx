@@ -1,19 +1,25 @@
+import React from 'react';
 import { useNavigate } from "react-router";
 import { ReadOnlyStatusBadge, TitleTypeThemes, type TitleRecord } from "~/entities/titleRecord";
 import { CompactRate } from "~/shared/ui/CompactRate";
 import { TitleActionsMenu } from "../../TitleActionsMenu";
 import { useTitleFilterStore, type TitleSortType } from "~/features/titleFilter/store/titleFilter.store";
+import { HIGHLIGHT_CHANGE_CLASSES } from '~/shared/constants';
+import { useTitleChangesHighlight } from './hooks/useTitleChangesHighlight';
+
 
 interface WatchlistRowReadOnlyProps {
   title: TitleRecord;
-  index: number;       
-  showNumber: boolean; 
+  index: number;
+  showNumber: boolean;
   onOpenRatingModal: (title: TitleRecord) => void;
   onRowClick: (title: TitleRecord) => void;
 }
 
 export const WatchlistRowReadOnly = ({ title, index, showNumber, onOpenRatingModal, onRowClick }: WatchlistRowReadOnlyProps) => {
   const navigate = useNavigate();
+
+   const changedFields = useTitleChangesHighlight(title, 1000);
 
   const handleImageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -27,9 +33,8 @@ export const WatchlistRowReadOnly = ({ title, index, showNumber, onOpenRatingMod
   return (
     <div
       onClick={() => onRowClick(title)}
-      className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 bg-card p-2 rounded-xl border transition-all duration-300 w-full min-w-0 cursor-pointer hover:border-border/80 ${themeClasses} ${
-        title.pinned ? "border-primary/30" : ""
-      }`}
+      className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 bg-card p-2 rounded-xl border transition-all duration-300 w-full min-w-0 cursor-pointer hover:border-border/80 ${themeClasses} ${title.pinned ? "border-primary/30" : ""
+        }`}
     >
       <div className="flex items-center flex-1 gap-3 min-w-0 max-w-full">
         {showNumber && !title.pinned && (
@@ -51,21 +56,23 @@ export const WatchlistRowReadOnly = ({ title, index, showNumber, onOpenRatingMod
           />
         </div>
 
-        <div className="grid flex-1 min-w-0">
-          <span className="block truncate font-bold text-foreground  text-xs sm:text-lg leading-tight w-full">
+        <div className={`grid flex-1 min-w-0  transition-all duration-700 ease-out rounded-md px-1 ${changedFields.titleName ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+          <span className="block truncate font-bold text-foreground text-xs sm:text-lg leading-tight w-full">
             {title.titleName}
           </span>
         </div>
       </div>
 
       <div className="flex items-center justify-between sm:justify-end gap-3 sm:w-auto mt-2 sm:mt-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        <ReadOnlyStatusBadge status={title.status} />
+        <div className={`transition-all duration-700 ease-out rounded-lg ${changedFields.status ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+          <ReadOnlyStatusBadge status={title.status} />
+        </div>
 
-        <div className="pointer-events-none opacity-90 flex-shrink-0">
+        <div className={`pointer-events-none opacity-90 flex-shrink-0 transition-all duration-700 ease-out rounded-lg p-0.5 ${changedFields.rating ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
           <CompactRate
-            currentRating={title.rating?.overall} 
+            currentRating={title.rating?.overall}
             avgRating={title.avgRating}
-            isAvgView={isAvgView} 
+            isAvgView={isAvgView}
           />
         </div>
 

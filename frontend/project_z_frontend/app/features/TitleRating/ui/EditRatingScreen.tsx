@@ -24,6 +24,7 @@ export const EditRatingScreen = ({
   const { rate, rateLoading } = useTitleRecordMutation(
     title.apiTitleId,
     title,
+    title
   );
 
   const [localRatings, setLocalRatings] = useState<Rating>(() =>
