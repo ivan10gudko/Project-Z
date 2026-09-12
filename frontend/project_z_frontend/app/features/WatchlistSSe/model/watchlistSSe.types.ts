@@ -8,7 +8,7 @@ export interface TitlePositionUpdateEventDto {
     titleId: number;
     customOrder: number;
     newIndex: number;
-    sortMode: string;
+    sortMode: "asc" | "desk";
 }
 
 export type WatchlistEventDataMap = {

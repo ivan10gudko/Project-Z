@@ -4,9 +4,8 @@ import { ReadOnlyStatusBadge, TitleTypeThemes, type TitleRecord } from "~/entiti
 import { CompactRate } from "~/shared/ui/CompactRate";
 import { TitleActionsMenu } from "../../TitleActionsMenu";
 import { useTitleFilterStore, type TitleSortType } from "~/features/titleFilter/store/titleFilter.store";
-import { HIGHLIGHT_CHANGE_CLASSES } from '~/shared/constants';
 import { useTitleChangesHighlight } from './hooks/useTitleChangesHighlight';
-
+import { ChangeHighlight } from '~/shared/ui/ChangeHighlight';
 
 interface WatchlistRowReadOnlyProps {
   title: TitleRecord;
@@ -19,7 +18,7 @@ interface WatchlistRowReadOnlyProps {
 export const WatchlistRowReadOnly = ({ title, index, showNumber, onOpenRatingModal, onRowClick }: WatchlistRowReadOnlyProps) => {
   const navigate = useNavigate();
 
-   const changedFields = useTitleChangesHighlight(title, 1000);
+  const changedFields = useTitleChangesHighlight(title, 1000);
 
   const handleImageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -56,25 +55,25 @@ export const WatchlistRowReadOnly = ({ title, index, showNumber, onOpenRatingMod
           />
         </div>
 
-        <div className={`grid flex-1 min-w-0  transition-all duration-700 ease-out rounded-md px-1 ${changedFields.titleName ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+        <ChangeHighlight isChanged={changedFields.titleName} className="grid flex-1 min-w-0 px-1">
           <span className="block truncate font-bold text-foreground text-xs sm:text-lg leading-tight w-full">
             {title.titleName}
           </span>
-        </div>
+        </ChangeHighlight>
       </div>
 
       <div className="flex items-center justify-between sm:justify-end gap-3 sm:w-auto mt-2 sm:mt-0 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        <div className={`transition-all duration-700 ease-out rounded-lg ${changedFields.status ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+        <ChangeHighlight isChanged={changedFields.status}>
           <ReadOnlyStatusBadge status={title.status} />
-        </div>
+        </ChangeHighlight>
 
-        <div className={`pointer-events-none opacity-90 flex-shrink-0 transition-all duration-700 ease-out rounded-lg p-0.5 ${changedFields.rating ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+        <ChangeHighlight isChanged={changedFields.rating} className="pointer-events-none opacity-90 flex-shrink-0 p-0.5">
           <CompactRate
             currentRating={title.rating?.overall}
             avgRating={title.avgRating}
             isAvgView={isAvgView}
           />
-        </div>
+        </ChangeHighlight>
 
         <div className="flex-shrink-0 ml-1 border-l border-border pl-2">
           <TitleActionsMenu title={title} isOwn={false} onOpenRatingModal={() => onOpenRatingModal(title)} />

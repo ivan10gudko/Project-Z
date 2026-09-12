@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { titleRecordKeys } from '~/entities/titleRecord/model/titleRecord.queryKeys';
 import type { TitleRecord } from '~/entities/titleRecord';
@@ -15,6 +15,11 @@ interface UseWatchlistRealtimeProps {
 export const useWatchlistRealtime = ({ isOwn, userId }: UseWatchlistRealtimeProps) => {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
+
+  const searchParamsRef = useRef(searchParams);
+  useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
 
   useEffect(() => {
     if (isOwn || !userId) return;
@@ -63,7 +68,7 @@ export const useWatchlistRealtime = ({ isOwn, userId }: UseWatchlistRealtimeProp
       },
 
       onPositionUpdated: ({ titleId, customOrder, newIndex, sortMode }) => {
-        const currentOrder = searchParams.get('order') || 'asc';
+        const currentOrder = searchParamsRef.current.get('order') || 'asc';
         if (sortMode !== currentOrder) {
           queryClient.invalidateQueries({
             queryKey: [...titleRecordKeys.all, userId],
@@ -110,5 +115,5 @@ export const useWatchlistRealtime = ({ isOwn, userId }: UseWatchlistRealtimeProp
     return () => {
       unsubscribe();
     };
-  }, [isOwn, userId, queryClient, searchParams]);
+  }, [isOwn, userId, queryClient]);
 };

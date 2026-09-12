@@ -13,7 +13,7 @@ import { formatDate } from "~/shared/helpers";
 import { useTitleById } from "~/entities/titleRecord";
 import { ErrorScreen } from "~/shared/ui/ErrorScreen";
 import { useChangesHighlight } from "~/shared/hooks";
-import { HIGHLIGHT_CHANGE_CLASSES } from "~/shared/constants";
+import { ChangeHighlight } from "~/shared/ui/ChangeHighlight";
 import { useMemo } from "react";
 
 interface ViewTitleScreenProps {
@@ -87,15 +87,15 @@ export const ViewTitleScreen = ({
                   <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-60 block mb-1">
                     Title Name
                   </span>
-                  <div className={`transition-all duration-700 ease-out rounded-md px-1 inline-block w-full ${changedFields.titleName ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+                  <ChangeHighlight isChanged={changedFields.titleName} className="px-1 inline-block w-full">
                     <h2 className="text-2xl font-black text-foreground uppercase leading-tight">
                       {title.titleName}
                     </h2>
-                  </div>
+                  </ChangeHighlight>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className={`transition-all duration-700 ease-out rounded-md p-1 ${changedFields.type ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+                  <ChangeHighlight isChanged={changedFields.type} className="p-1">
                     <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-60 block mb-1">
                       Type
                     </span>
@@ -104,28 +104,28 @@ export const ViewTitleScreen = ({
                     >
                       {currentTypeLabel}
                     </span>
-                  </div>
+                  </ChangeHighlight>
 
-                  <div className={`transition-all duration-700 ease-out rounded-lg p-1 ${changedFields.status ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+                  <ChangeHighlight isChanged={changedFields.status} className="p-1">
                     <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-60 block mb-1">
                       Status
                     </span>
                     <div className="inline-block">
                       <ReadOnlyStatusBadge status={title.status} />
                     </div>
-                  </div>
+                  </ChangeHighlight>
                 </div>
 
                 <div className="pt-2">
                   <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-60 block mb-1">
                     Rating
                   </span>
-                  <div className={`pointer-events-none opacity-90 inline-block transition-all duration-700 ease-out rounded-lg p-0.5 ${changedFields.rating ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+                  <ChangeHighlight isChanged={changedFields.rating} className="pointer-events-none opacity-90 inline-block p-0.5">
                     <CompactRate
                       currentRating={title.rating?.overall}
                       avgRating={title.avgRating}
                     />
-                  </div>
+                  </ChangeHighlight>
                 </div>
               </div>
             </div>
@@ -134,7 +134,7 @@ export const ViewTitleScreen = ({
               <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase opacity-60 block ml-1">
                 Description & Notes
               </span>
-              <div className={`transition-all duration-700 ease-out rounded-xl ${changedFields.description ? HIGHLIGHT_CHANGE_CLASSES : ""}`}>
+              <ChangeHighlight isChanged={changedFields.description} className="rounded-xl">
                 <div className="w-full p-4 border-2 border-border/60 bg-card/30 rounded-xl font-medium text-foreground text-sm leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto custom-scrollbar">
                   {title.description?.trim() ? (
                     title.description
@@ -144,7 +144,7 @@ export const ViewTitleScreen = ({
                     </span>
                   )}
                 </div>
-              </div>
+              </ChangeHighlight>
             </div>
 
             <div className="text-[11px] text-muted-foreground/60 font-medium px-1 flex justify-between items-center pt-2">

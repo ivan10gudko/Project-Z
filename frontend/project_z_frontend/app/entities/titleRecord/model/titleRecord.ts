@@ -34,7 +34,7 @@ export interface TitleVisual {
 export interface TitlePositionUpdate {
     customOrder: number;
     newIndex: number;
-    sortMode: string;
+    sortMode: "asc" | "desk";
 }
 export const titleTypeOptions = [
     { value: TitleType.ANIME, label: "Anime" },

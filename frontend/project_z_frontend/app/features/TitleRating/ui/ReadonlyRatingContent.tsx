@@ -3,10 +3,12 @@ import CalculateIcon from "@mui/icons-material/Calculate";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import { CompactRate } from "../../../shared/ui/CompactRate";
 import type { Rating } from "~/shared/types";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { RatingNeighborsContent } from "./RatingNeighbours";
 import { AnimatedList } from "~/shared/ui/AnimatedComps";
+import { useChangesHighlight } from "~/shared/hooks";
+import { ChangeHighlight } from "~/shared/ui/ChangeHighlight";
 
 interface ReadonlyRatingContentProps {
   ratings: Rating;
@@ -14,6 +16,14 @@ interface ReadonlyRatingContentProps {
   titleId: number;
   onTitleChange?: (newTitleId: number) => void;
 }
+
+const useRatingChangesHighlight = (ratings: Rating, duration = 2000) => {
+  const watchedData = useMemo(() => ratings, [ratings]);
+
+  const keys = Object.keys(ratings) as (keyof Rating)[];
+
+  return useChangesHighlight(watchedData, keys, duration);
+};
 
 export const ReadonlyRatingContent = ({
   ratings,
@@ -23,6 +33,8 @@ export const ReadonlyRatingContent = ({
 }: ReadonlyRatingContentProps) => {
   const safeRatings: Rating = Object.keys(ratings).length === 0 ? {} : ratings;
   const [openPopoverKey, setOpenPopoverKey] = useState<string | null>(null);
+
+  const changedFields = useRatingChangesHighlight(safeRatings, 2000);
 
   const customCategories = Object.keys(safeRatings).filter(
     (key) => key !== "overall"
@@ -59,6 +71,7 @@ export const ReadonlyRatingContent = ({
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                 <div className="shrink-0 scale-[0.8] sm:scale-100 origin-right flex justify-end w-full sm:w-auto pointer-events-none">
+                  {/* За бажанням можна обгорнути і overall, якщо треба */}
                   <CompactRate
                     currentRating={currentOverall}
                     isOwn={false}
@@ -99,55 +112,63 @@ export const ReadonlyRatingContent = ({
                   items={customCategories}
                   getKey={(key) => key}
                   className="flex flex-col gap-3 sm:gap-4 w-full"
-                  renderItem={(key) => (
-                    <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl border border-border/50 bg-card/40">
-                      <span className="text-xs sm:text-sm font-bold text-muted-foreground capitalize">
-                        {key}
-                      </span>
+                  renderItem={(key) => {
+                    // Перевіряємо чи змінилося значення для конкретного ключа
+                    const isFieldChanged = Boolean(changedFields[key]);
 
-                      <div className="flex items-center gap-2">
-                        <DropdownMenu.Root
-                          open={openPopoverKey === key}
-                          onOpenChange={(open) =>
-                            setOpenPopoverKey(open ? key : null)
-                          }
-                        >
-                          <DropdownMenu.Trigger asChild>
-                            <button className="p-1.5 rounded-lg border border-border/50 bg-background-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer">
-                              <CompareArrowsIcon sx={{ fontSize: 16 }} />
-                            </button>
-                          </DropdownMenu.Trigger>
+                    return (
+                      <ChangeHighlight
+                        isChanged={isFieldChanged}
+                        className="flex items-center justify-between p-3 sm:p-4 rounded-xl border border-border/50 bg-card/40"
+                      >
+                        <span className="text-xs sm:text-sm font-bold text-muted-foreground capitalize">
+                          {key}
+                        </span>
 
-                          <DropdownMenu.Portal>
-                            <DropdownMenu.Content
-                              align="end"
-                              side="bottom"
-                              sideOffset={8}
-                              className="z-[9999] outline-none"
-                            >
-                              <RatingNeighborsContent
-                                titleId={titleId}
-                                category={key}
-                                ratingValue={safeRatings[key] ?? 0}
-                                onClose={() => setOpenPopoverKey(null)}
-                                onTitleChange={(newTitleId) => {
-                                  onTitleChange?.(newTitleId);
-                                  setOpenPopoverKey(null);
-                                }}
-                              />
-                            </DropdownMenu.Content>
-                          </DropdownMenu.Portal>
-                        </DropdownMenu.Root>
+                        <div className="flex items-center gap-2">
+                          <DropdownMenu.Root
+                            open={openPopoverKey === key}
+                            onOpenChange={(open) =>
+                              setOpenPopoverKey(open ? key : null)
+                            }
+                          >
+                            <DropdownMenu.Trigger asChild>
+                              <button className="p-1.5 rounded-lg border border-border/50 bg-background-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer">
+                                <CompareArrowsIcon sx={{ fontSize: 16 }} />
+                              </button>
+                            </DropdownMenu.Trigger>
 
-                        <div className="scale-[0.85] sm:scale-100 origin-right pointer-events-none">
-                          <CompactRate
-                            currentRating={safeRatings[key] ?? 0}
-                            isOwn={false}
-                          />
+                            <DropdownMenu.Portal>
+                              <DropdownMenu.Content
+                                align="end"
+                                side="bottom"
+                                sideOffset={8}
+                                className="z-[9999] outline-none"
+                              >
+                                <RatingNeighborsContent
+                                  titleId={titleId}
+                                  category={key}
+                                  ratingValue={safeRatings[key] ?? 0}
+                                  onClose={() => setOpenPopoverKey(null)}
+                                  onTitleChange={(newTitleId) => {
+                                    onTitleChange?.(newTitleId);
+                                    setOpenPopoverKey(null);
+                                  }}
+                                />
+                              </DropdownMenu.Content>
+                            </DropdownMenu.Portal>
+                          </DropdownMenu.Root>
+
+                          <div className="scale-[0.85] sm:scale-100 origin-right pointer-events-none">
+                            <CompactRate
+                              currentRating={safeRatings[key] ?? 0}
+                              isOwn={false}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
+                      </ChangeHighlight>
+                    );
+                  }}
                 />
               )}
             </div>
