@@ -44,7 +44,7 @@ export const useCreateRoomBan = (roomId: number) => {
           reason: variables.reason || "Banned by Admin",
           createdAt: new Date().toISOString(),
           user: variables.userData || fallbackUser,
-          bannedByUser: fallbackUser, // Заповнюємо базовим об'єктом на час очікування відповіді сервера
+          bannedByUser: fallbackUser,
         },
         ...(oldBans || []),
       ]);

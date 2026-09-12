@@ -1,4 +1,4 @@
-import { type CreateTitleRecord, type SameCriteriaRating, type TitleParams, type TitleRecord, type TitleStats } from "../model/titleRecord"
+import { type CreateTitleRecord, type SameCriteriaRating, type TitleParams, type TitlePositionUpdate, type TitleRecord, type TitleStats } from "../model/titleRecord"
 import type { PageResponse } from "~/shared/types";
 import { apiClient } from "~/shared/api";
 import { Status } from "~/shared/types/Status";
@@ -25,7 +25,7 @@ interface TitleRecordService {
     put(titleId: number, titleData: TitleRecord): Promise<TitleRecord>;
     patch(titleId: number, titleData: Partial<TitleRecord>): Promise<TitleRecord>;
     delete(titleId: number): Promise<void>;
-    patchCustomOrder(titleId: number, newTitlePosition: number): Promise<void>;
+    patchCustomOrder(titleId: number, dto: TitlePositionUpdate): Promise<void>;
     reindexCustomOrder(userId: string): Promise<void>;
     getWatched(userId: string): Promise<Array<TitleRecord>>;
     getPlanned(userId: string): Promise<Array<TitleRecord>>;
@@ -99,8 +99,8 @@ export const titleRecordService: TitleRecordService = {
 
         return response.data;
     },
-    async patchCustomOrder(titleId, newTitlePosition) {
-        await apiClient.patch(`titles/${titleId}/position`, { customOrder: newTitlePosition });
+    async patchCustomOrder(titleId, dto) {
+        await apiClient.patch(`titles/${titleId}/position`, dto );
 
     },
     async reindexCustomOrder(userId) {
